@@ -1,41 +1,92 @@
-import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
-import { AzureOpenAIEmbeddings, OpenAIEmbeddings } from "@langchain/openai";
-import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { createClient } from "@supabase/supabase-js";
+import { AzureChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import retriever from "./utils/retriever.js";
+import { configDotenv } from "dotenv";
+import { RunnablePassthrough, RunnableSequence } from "@langchain/core/runnables";
 
-import fs from "fs/promises";
-import dotenv from "dotenv";
-import fetch from "cross-fetch";
 
-dotenv.config();
+configDotenv();
 
-try {
-    const text = await fs.readFile('demon-slayer.txt', 'utf8')
-    const sbaApikey = process.env.API_KEY
-    const sbUrl = process.env.PROJECT_URL
-    const splitter = new RecursiveCharacterTextSplitter({
-        chunkSize: 500,
-        chunkOverlap: 50,
-    });
-    const output = await splitter.createDocuments([text])
-    const client = createClient(sbUrl, sbaApikey, { fetch })
-    await SupabaseVectorStore.fromDocuments(
-        output,
-        new AzureOpenAIEmbeddings({
-            azure: true,
-            azureOpenAIApiKey: "4VemMeBCnOQEfVYWVQSxrzbcVcnPt3PxYaHx8hoCi1LQvd6VBQBCJQQJ99BFAC77bzfXJ3w3AAABACOGjmHj",
-            azureOpenAIApiInstanceName: "showfolio",
-            azureOpenAIApiEmbeddingsDeploymentName: "text-embedding-3-large",
-            azureOpenAIApiVersion: "2024-04-01-preview",
-            maxRetries: 1,
-
-        }), {
-        client: client,
-        tableName: 'documents'
-    }
-    )
-        ;
-} catch (error) {
-    console.log(error)
+function combineDocuments(docs){
+    if(!Array.isArray(docs)) return "";
+    return docs.map((doc)=> doc.pageContent).join('/n/n')
 }
+
+
+// document.addEventListener('submit', (e) => {
+//     e.preventDefault()
+//     progressConversation()
+// })
+
+const llm = new AzureChatOpenAI({
+    azure: true,
+      azureOpenAIApiKey:process.env.AZURE_OPENAI_API_KEY,
+      azureOpenAIApiInstanceName: process.env.AZURE_OPENAI_API_INSTANCE_NAME,
+      azureOpenAIApiDeploymentName: "gpt-4.0",
+      azureOpenAIApiVersion: "2024-04-01-preview",
+})
+
+const standaloneQuestionTemplate =  `Given some conversation history (if any) and a question, convert the question to a standalone question. 
+
+question: {question}
+standalone question:`;
+
+const standaloneQuestionPrompt = PromptTemplate.fromTemplate(standaloneQuestionTemplate)
+
+const answertemplate  = `You are a helpful and enthusiastic support bot who can answer a given question about Scrimba based on the context provided. Try to find the answer in the context.
+ If you really don't know the answer, say "I'm sorry, I don't know the answer 
+ to that." And direct the questioner to email help@scrimba.com. Don't try to make up an answer.
+  Always speak as if you were chatting to a friend.
+  context:{context}
+  question:{question}
+  answer:
+  `
+
+const answerPrompt = PromptTemplate.fromTemplate(answertemplate)
+
+const standaloneQuestionChain = RunnableSequence.from([
+   standaloneQuestionPrompt,
+   llm,
+   new StringOutputParser()
+])
+
+const retrieverChain = RunnableSequence.from([
+    (prev) => prev.standaloneQuestion,
+    retriever,
+    combineDocuments
+])
+
+const answerChain = RunnableSequence.from([
+    answerPrompt,
+    llm,
+    new StringOutputParser()
+])
+
+const chain = RunnableSequence.from([
+    {
+        standaloneQuestion: standaloneQuestionChain,
+        original_input: new RunnablePassthrough(),
+    },
+    {
+        context:retrieverChain,
+        question:({original_input}) => original_input.question,
+        answer: ({original_input}) => original_input.answer
+    },
+
+    answerChain
+])
+
+// const standaloneQuestionChain = standaloneQuestionPrompt.pipe(llm)
+//                           .pipe(new StringOutputParser()).pipe(retriever).pipe(combineDocuments).pipe(answerPrompt)
+
+
+
+const response = await  standaloneQuestionChain.invoke({
+   question: 'What are the technical requi rements for running Scrimba? I only have a very laptop which is not that powerful ',
+   
+})
+
+console.log(response)
+
+export default chain;

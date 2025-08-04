@@ -29,7 +29,7 @@ const grammarPrompt = PromptTemplate.fromTemplate(
 )
 
 const translation = PromptTemplate.fromTemplate(
-    `Given a sentence and Translate that sentence into {language}
+    `Given a sentence and Translate that sentence into {language}. If the language is Japanese, also include the romaji (English pronunciation).
     sentence:{grammatically_correct_sentence}
     translated_sentence:
     `
@@ -54,17 +54,22 @@ const translationChain = RunnableSequence.from([
 ])
 
 const chain = RunnableSequence.from([
-    {punctuated_sentence: punctuationChain},
-    {grammatically_correct_sentence:grammarChain},
-     translationChain
-    
-    // {punctuated:  prevresult => prevresult}, , not a good way to do this
-    
-    
-])
+    {punctuated_sentence: punctuationChain,
+    original_input : new RunnablePassthrough()
+   },
+   {
+    grammatically_correct_sentence : grammarChain,
+    language: ({original_input}) => original_input.language
+   },
+
+   translationChain,
+    // {punctuated:  prevresult => prevresult}, , 
+    // not a good way to do this
+]);
+
 
 const response = await chain.invoke({
-    sentence:`i dont liked mondays`,
+    sentence:`My name is Ronit`,
     language: `Japanese`
 })
 
