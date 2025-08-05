@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom chat bubble styles */
+@layer components {
+  .speech {
+    @apply relative p-4 mb-3 rounded-lg max-w-xs break-words;
+  }
+  
+  .speech-human {
+    @apply bg-blue-500 text-white ml-auto rounded-br-none;
+  }
+  
+  .speech-ai {
+    @apply bg-gray-200 text-gray-800 mr-auto rounded-bl-none;
+  }
+  
+  .typing-indicator {
+    @apply bg-gray-100 text-gray-500 italic;
+  }
+  
+  .submit-btn {
+    @apply bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg ml-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+}

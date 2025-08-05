@@ -23,7 +23,7 @@ const llm = new AzureChatOpenAI({
     azure: true,
       azureOpenAIApiKey:process.env.AZURE_OPENAI_API_KEY,
       azureOpenAIApiInstanceName: process.env.AZURE_OPENAI_API_INSTANCE_NAME,
-      azureOpenAIApiDeploymentName: "gpt-4.0",
+      azureOpenAIApiDeploymentName: "gpt-4.1",
       azureOpenAIApiVersion: "2024-04-01-preview",
 })
 
@@ -34,10 +34,9 @@ standalone question:`;
 
 const standaloneQuestionPrompt = PromptTemplate.fromTemplate(standaloneQuestionTemplate)
 
-const answertemplate  = `You are a helpful and enthusiastic support bot who can answer a given question about Scrimba based on the context provided. Try to find the answer in the context.
- If you really don't know the answer, say "I'm sorry, I don't know the answer 
- to that." And direct the questioner to email help@scrimba.com. Don't try to make up an answer.
-  Always speak as if you were chatting to a friend.
+const answertemplate  = `You are a helpful and enthusiastic support bot who can answer questions about Demon Slayer based on the provided context.
+If you don't know the answer, say: "I'm sorry, I don't know the answer to that." You can also suggest reaching out to official support for more information.
+Keep your tone friendly and casual, like you're chatting with a friend..
   context:{context}
   question:{question}
   answer:
@@ -82,11 +81,11 @@ const chain = RunnableSequence.from([
 
 
 
-const response = await  standaloneQuestionChain.invoke({
-   question: 'What are the technical requi rements for running Scrimba? I only have a very laptop which is not that powerful ',
+// const response = await  chain.invoke({
+//    question: 'What is demon slayer?',
    
-})
+// })
 
-console.log(response)
+// console.log(response)
 
 export default chain;

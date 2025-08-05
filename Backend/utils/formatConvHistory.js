@@ -1,4 +1,4 @@
-export function formatConvHistory(history) {
+export default function formatConvHistory(history) {
   if (!history || !Array.isArray(history)) return "";
 
   return history

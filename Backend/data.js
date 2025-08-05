@@ -2,8 +2,6 @@ import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase"
 import { AzureOpenAIEmbeddings, OpenAIEmbeddings } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { createClient } from "@supabase/supabase-js";
-import { PromptTemplate } from "@langchain/core/prompts";
-
 import fs from "fs/promises";
 import dotenv from "dotenv";
 import fetch from "cross-fetch";
@@ -19,7 +17,7 @@ try {
         chunkOverlap: 50,
     });
     const output = await splitter.createDocuments([text])
-    const client = createClient(sbUrl, sbaApikey, { fetch })
+    const supabase = createClient(sbUrl, sbaApikey, { fetch })
     await SupabaseVectorStore.fromDocuments(
         output,
         new AzureOpenAIEmbeddings({
@@ -31,8 +29,9 @@ try {
             maxRetries: 1,
 
         }), {
-        client: client,
-        tableName: 'documents'
+        client: supabase,
+        tableName: 'documents',
+        
     }
     )
         ;
