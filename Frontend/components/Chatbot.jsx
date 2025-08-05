@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
-// const axios = require('axios') // Uncomment this in your actual implementation
+
 
 const Chatbot = () => {
  
@@ -8,8 +8,6 @@ const Chatbot = () => {
   const LOCAL_STORAGE_KEY = "ChatHistory";
   const [input, setInput] = useState("")
 
-  // Note: localStorage is not available in Claude artifacts
-  // In your actual implementation, this will work with real localStorage
   const [messages, setMessages] = useState(() => {
     // const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
     // return saved ? JSON.parse(saved) : []
