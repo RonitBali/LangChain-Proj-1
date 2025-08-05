@@ -10,7 +10,7 @@ const app = express();
 
 // Enhanced CORS configuration
 app.use(cors({
-    origin: ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "http://127.0.0.1:5173"],
+    origin: ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "http://127.0.0.1:5173", "https://your-frontend-url.onrender.com"],
     credentials: true,
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -50,8 +50,8 @@ app.post('/api/chat', async (req, res) => {
         });
     }
 });
-
-app.listen(3001, () => {
-    console.log(" Server is running on http://localhost:3001");
+const PORT = process.env.PORT || 3001
+app.listen( PORT , () => {
+    console.log(` Server is running on http://localhost:${PORT}`);
     
 });
